@@ -82,6 +82,7 @@ const (
 	testServiceInstanceName                 = "test-instance"
 	testServiceBindingName                  = "test-binding"
 	testServiceBindingSecretName            = "test-secret"
+	testServiceBindingSecretKey             = "test-secret-key"
 	testNamespace                           = "test-ns"
 	testServiceInstanceCredentialSecretName = "test-secret"
 	testOperation                           = "test-operation"

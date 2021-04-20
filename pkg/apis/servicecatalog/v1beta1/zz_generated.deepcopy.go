@@ -989,6 +989,11 @@ func (in *ServiceBindingSpec) DeepCopyInto(out *ServiceBindingSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.SecretKey != nil {
+		in, out := &in.SecretKey, &out.SecretKey
+		*out = new(string)
+		**out = **in
+	}
 	if in.SecretTransforms != nil {
 		in, out := &in.SecretTransforms, &out.SecretTransforms
 		*out = make([]SecretTransform, len(*in))
