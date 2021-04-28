@@ -1186,6 +1186,13 @@ type ServiceBindingSpec struct {
 	// namespace that will hold the credentials associated with the ServiceBinding.
 	SecretName string `json:"secretName,omitempty"`
 
+	// SecretKey is used as the key inside the secret to store the credentials
+	// returned by the broker encoded as json. If not specified the credentials
+	// returned by the broker will be used directly as the secrets data. This
+	// can cause problems when using complex data structures.
+	// +optional
+	SecretKey *string `json:"secretKey,omitempty"`
+
 	// List of transformations that should be applied to the credentials
 	// associated with the ServiceBinding before they are inserted into the Secret.
 	SecretTransforms []SecretTransform `json:"secretTransforms,omitempty"`

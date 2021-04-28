@@ -64,6 +64,7 @@ func TestReconcileServiceBindingWithParametersNamespacedRefs(t *testing.T) {
 	sharedInformers.ServiceInstances().Informer().GetStore().Add(
 		getTestServiceInstanceWithNamespacedRefsAndStatus(v1beta1.ConditionTrue))
 
+	key := testServiceBindingSecretKey
 	binding := &v1beta1.ServiceBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       testServiceBindingName,
@@ -75,6 +76,7 @@ func TestReconcileServiceBindingWithParametersNamespacedRefs(t *testing.T) {
 			InstanceRef: v1beta1.LocalObjectReference{Name: testServiceInstanceName},
 			ExternalID:  testServiceBindingGUID,
 			SecretName:  testServiceBindingSecretName,
+			SecretKey:   &key,
 		},
 		Status: v1beta1.ServiceBindingStatus{
 			UnbindStatus: v1beta1.ServiceBindingUnbindStatusNotRequired,
@@ -165,19 +167,30 @@ func TestReconcileServiceBindingWithParametersNamespacedRefs(t *testing.T) {
 	if e, a := testServiceBindingSecretName, actionSecret.Name; e != a {
 		t.Fatalf("Unexpected name of secret; %s", expectedGot(e, a))
 	}
-	value, ok := actionSecret.Data["a"]
+
+	credentials_json, ok := actionSecret.Data[key]
+	if !ok {
+		t.Fatalf("Didn't find secret key '%s' in created secret", key)
+	}
+	credentials := map[string]string{}
+
+	if err := json.Unmarshal(credentials_json, &credentials); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	actual, ok := credentials["a"]
 	if !ok {
 		t.Fatal("Didn't find secret key 'a' in created secret")
 	}
-	if e, a := "b", string(value); e != a {
-		t.Fatalf("Unexpected value of key 'a' in created secret; %s", expectedGot(e, a))
+	if e := "b"; actual != e {
+		t.Fatalf("Unexpected value of key 'a' in created secret; %s", expectedGot(e, actual))
 	}
-	value, ok = actionSecret.Data["c"]
+	actual, ok = credentials["c"]
 	if !ok {
 		t.Fatal("Didn't find secret key 'c' in created secret")
 	}
-	if e, a := "d", string(value); e != a {
-		t.Fatalf("Unexpected value of key 'c' in created secret; %s", expectedGot(e, a))
+	if e := "d"; actual != e {
+		t.Fatalf("Unexpected value of key 'c' in created secret; %s", expectedGot(e, actual))
 	}
 
 	events := getRecordedEvents(testController)

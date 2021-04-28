@@ -19,6 +19,7 @@ package controller
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"reflect"
@@ -546,10 +547,21 @@ func (c *controller) injectServiceBinding(binding *v1beta1.ServiceBinding, crede
 	}
 
 	secretData := make(map[string][]byte)
-	for k, v := range credentials {
+
+	if binding.Spec.SecretKey != nil {
+		var credentials_json []byte
 		var err error
-		if secretData[k], err = serialize(v); err != nil {
-			return fmt.Errorf("Unable to serialize value for credential key %q (value is intentionally not logged): %s", k, err)
+		if credentials_json, err = json.Marshal(credentials); err != nil {
+			return fmt.Errorf("Unable to serialize credentials (value is intentionally not logged): %s", err)
+		}
+
+		secretData[*binding.Spec.SecretKey] = credentials_json
+	} else {
+		for k, v := range credentials {
+			var err error
+			if secretData[k], err = serialize(v); err != nil {
+				return fmt.Errorf("Unable to serialize value for credential key %q (value is intentionally not logged): %s", k, err)
+			}
 		}
 	}
 
